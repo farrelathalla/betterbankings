@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Carousel from "@/components/Carousel";
 import {
   ArrowLeft,
@@ -11,16 +12,98 @@ import {
   Phone,
   Building2,
   Briefcase,
+  Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import EllipseYellow2 from "@/public/ellipse-yellow2.svg";
 import Image from "next/image";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function AuthPage() {
+  const router = useRouter();
+  const { signIn, signUp, user, loading: authLoading } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    position: "",
+    organization: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  // Redirect if already logged in (using useEffect to avoid setState during render)
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push("/");
+    }
+  }, [user, authLoading, router]);
+
+  // Show loading while checking auth or redirecting
+  if (authLoading || (user && !authLoading)) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-white">
+        <Loader2 className="w-8 h-8 animate-spin text-[#14213D]" />
+      </div>
+    );
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError("");
+  };
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+    const result = await signIn(formData.email, formData.password);
+    if (result.success) {
+      router.push("/");
+    } else {
+      setError(result.error || "Sign in failed");
+    }
+    setIsSubmitting(false);
+  };
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsSubmitting(false);
+      return;
+    }
+    // Validate password length
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setIsSubmitting(false);
+      return;
+    }
+    const result = await signUp({
+      email: formData.email,
+      password: formData.password,
+      name: formData.name,
+      phone: formData.phone || undefined,
+      position: formData.position || undefined,
+      organization: formData.organization || undefined,
+    });
+    if (result.success) {
+      router.push("/");
+    } else {
+      setError(result.error || "Sign up failed");
+    }
+    setIsSubmitting(false);
+  };
 
   return (
     <div className="h-screen w-full flex bg-white overflow-hidden">
@@ -81,17 +164,23 @@ export default function AuthPage() {
             <p className="text-gray-500 mt-4 text-lg">
               {isSignUp
                 ? "Already have an account? "
-                : "Already have an account? "}
+                : "Don't have an account? "}
               {isSignUp ? (
                 <button
-                  onClick={() => setIsSignUp(false)}
+                  onClick={() => {
+                    setIsSignUp(false);
+                    setError("");
+                  }}
                   className="font-bold text-[#14213D] underline"
                 >
                   Sign In
                 </button>
               ) : (
                 <button
-                  onClick={() => setIsSignUp(true)}
+                  onClick={() => {
+                    setIsSignUp(true);
+                    setError("");
+                  }}
                   className="font-bold text-[#14213D] underline"
                 >
                   Sign Up
@@ -99,6 +188,16 @@ export default function AuthPage() {
               )}
             </p>
           </motion.div>
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
+            >
+              {error}
+            </motion.div>
+          )}
 
           <AnimatePresence mode="wait">
             {isSignUp ? (
@@ -109,16 +208,21 @@ export default function AuthPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-5"
+                onSubmit={handleSignUp}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-bold text-[#14213D] mb-2">
-                      Full Name
+                      Full Name *
                     </label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
                         type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
                         placeholder="John Anderson"
                         className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                       />
@@ -126,12 +230,16 @@ export default function AuthPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-[#14213D] mb-2">
-                      Email Address
+                      Email Address *
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
                         type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
                         placeholder="john.anderson@bank.com"
                         className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                       />
@@ -148,6 +256,9 @@ export default function AuthPage() {
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
                         type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
                         placeholder="+62 812 3456 7890"
                         className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                       />
@@ -161,6 +272,9 @@ export default function AuthPage() {
                       <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                       <input
                         type="text"
+                        name="position"
+                        value={formData.position}
+                        onChange={handleChange}
                         placeholder="Chief Risk Officer"
                         className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                       />
@@ -176,6 +290,9 @@ export default function AuthPage() {
                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="text"
+                      name="organization"
+                      value={formData.organization}
+                      onChange={handleChange}
                       placeholder="National Bank Indonesia"
                       className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                     />
@@ -184,11 +301,15 @@ export default function AuthPage() {
 
                 <div>
                   <label className="block text-sm font-bold text-[#14213D] mb-2">
-                    Password
+                    Password *
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
                       placeholder="********"
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                     />
@@ -208,11 +329,15 @@ export default function AuthPage() {
 
                 <div>
                   <label className="block text-sm font-bold text-[#14213D] mb-2">
-                    Confirm Password
+                    Confirm Password *
                   </label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required
                       placeholder="********"
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                     />
@@ -232,8 +357,19 @@ export default function AuthPage() {
                   </div>
                 </div>
 
-                <button className="w-full cursor-pointer bg-gradient-to-r from-[#1B2B4B] to-[#355189] text-white py-4 rounded-lg font-semibold text-lg hover:bg-blue-900 transition-colors shadow-lg hover:shadow-xl active:scale-95 duration-200 mt-4">
-                  Create Account
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full cursor-pointer bg-gradient-to-r from-[#1B2B4B] to-[#355189] text-white py-4 rounded-lg font-semibold text-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </button>
               </motion.form>
             ) : (
@@ -244,6 +380,7 @@ export default function AuthPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-6"
+                onSubmit={handleSignIn}
               >
                 <div>
                   <label className="block text-sm font-bold text-[#14213D] mb-2">
@@ -253,6 +390,10 @@ export default function AuthPage() {
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
                       placeholder="john.anderson@bank.com"
                       className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                     />
@@ -266,7 +407,11 @@ export default function AuthPage() {
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
-                      placeholder="********"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      placeholder="••••••••"
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-400"
                     />
                     <button
@@ -292,8 +437,19 @@ export default function AuthPage() {
                   </a>
                 </div>
 
-                <button className="w-full cursor-pointer bg-gradient-to-r from-[#1B2B4B] to-[#355189] text-white py-4 rounded-lg font-semibold text-lg hover:bg-blue-900 transition-colors shadow-lg hover:shadow-xl active:scale-95 duration-200">
-                  Sign In
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full cursor-pointer bg-gradient-to-r from-[#1B2B4B] to-[#355189] text-white py-4 rounded-lg font-semibold text-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
                 </button>
               </motion.form>
             )}

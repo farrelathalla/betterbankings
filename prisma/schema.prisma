@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  name         String
+  phone        String?
+  position     String?
+  organization String?
+  role         String   @default("user") // "admin" or "user"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model RateLimit {
+  id         String @id @default(cuid())
+  ipAddress  String
+  date       String // YYYY-MM-DD format for daily tracking
+  clickCount Int    @default(0)
+
+  @@unique([ipAddress, date])
+}
+
+// ============================================
+// Basel Framework Models
+// ============================================
+
+// Standard categories (SCO, CAP, RBC, CRE, etc.)
+model BaselStandard {
+  id          String         @id @default(cuid())
+  code        String         @unique // "SCO", "CAP", "RBC"
+  name        String         // "Scope of application"
+  description String?
+  order       Int            @default(0)
+  chapters    BaselChapter[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+// Chapters within a standard (SCO10, SCO30, CAP10, etc.)
+model BaselChapter {
+  id            String         @id @default(cuid())
+  code          String         // "10", "30"
+  title         String         // "Introduction", "Banking, securities..."
+  standardId    String
+  standard      BaselStandard  @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  effectiveDate DateTime?
+  lastUpdate    DateTime?
+  status        String         @default("current") // "current", "archived"
+  order         Int            @default(0)
+  sections      BaselSection[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([standardId, code])
+}
+
+// Sections within a chapter (e.g., "Consolidation", "General requirements")
+model BaselSection {
+  id          String            @id @default(cuid())
+  title       String            // "Consolidation"
+  chapterId   String
+  chapter     BaselChapter      @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  order       Int               @default(0)
+  subsections BaselSubsection[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+// Subsections (SCO30.1, SCO30.2, etc.) - the actual content paragraphs
+model BaselSubsection {
+  id        String          @id @default(cuid())
+  number    String          // "30.1", "30.2"
+  content   String          @db.Text // Rich text JSON with references/tooltips
+  sectionId String
+  section   BaselSection    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  order     Int             @default(0)
+  footnotes BaselFootnote[]
+  faqs      BaselFAQ[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([sectionId, number])
+}
+
+// Footnotes attached to subsections
+model BaselFootnote {
+  id           String          @id @default(cuid())
+  number       Int
+  content      String          @db.Text
+  subsectionId String
+  subsection   BaselSubsection @relation(fields: [subsectionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+// FAQs attached to subsections
+model BaselFAQ {
+  id           String          @id @default(cuid())
+  question     String
+  answer       String          @db.Text
+  subsectionId String
+  subsection   BaselSubsection @relation(fields: [subsectionId], references: [id], onDelete: Cascade)
+  order        Int             @default(0)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+// Recent updates log (manually managed by admin)
+model BaselUpdate {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  link        String?  // Optional link to chapter/section
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}

@@ -14,7 +14,7 @@ export default function AdvisoryServices() {
   return (
     <div className="min-h-screen bg-[#fcfaf9] flex flex-col lg:flex-row overflow-x-hidden">
       {/* Sidebar - Fixed */}
-      <Sidebar isAuthenticated={false} />
+      <Sidebar />
 
       {/* Main Content - Offset by Sidebar Width on Desktop */}
       <main className="w-full flex-1 lg:ml-[280px] relative">

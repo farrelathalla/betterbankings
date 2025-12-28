@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row overflow-x-hidden">
       {/* Sidebar - Fixed */}
-      <Sidebar isAuthenticated={false} />
+      <Sidebar />
 
       {/* Main Content - Offset by Sidebar Width on Desktop */}
       <main className="w-full flex-1 lg:ml-[280px] relative">
