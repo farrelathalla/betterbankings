@@ -189,6 +189,9 @@ model Notification {
   link        String?            // Optional redirect URL
   createdAt   DateTime           @default(now())
   userReads   UserNotification[]
+
+  @@index([category])
+  @@index([createdAt])
 }
 
 // Track read status per user
@@ -202,4 +205,6 @@ model UserNotification {
   createdAt      DateTime     @default(now())
 
   @@unique([userId, notificationId])
+  @@index([userId])
+  @@index([userId, isRead])
 }

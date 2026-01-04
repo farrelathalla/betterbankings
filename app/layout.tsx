@@ -9,8 +9,67 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "BetterBankings",
-  description: "Better banking for everyone",
+  metadataBase: new URL("https://betterbankings.com"),
+  title: {
+    default: "BetterBankings - Banking Regulation & Risk Management Platform",
+    template: "%s | BetterBankings",
+  },
+  description:
+    "Your comprehensive platform for banking regulation, Basel Framework compliance, risk management insights, and industry data. Expert advisory services for Southeast Asian banks.",
+  keywords: [
+    "BetterBankings",
+    "Basel Framework",
+    "Basel III",
+    "Basel IV",
+    "banking regulation",
+    "risk management",
+    "bank compliance",
+    "regulatory compliance",
+    "Southeast Asia banking",
+    "Indonesia banking",
+    "banking advisory",
+    "credit risk",
+    "operational risk",
+    "liquidity risk",
+  ],
+  authors: [{ name: "BetterBankings" }],
+  creator: "BetterBankings",
+  publisher: "BetterBankings",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://betterbankings.com",
+    siteName: "BetterBankings",
+    title: "BetterBankings - Banking Regulation & Risk Management Platform",
+    description:
+      "Your comprehensive platform for banking regulation, Basel Framework compliance, risk management insights, and industry data.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "BetterBankings Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BetterBankings - Banking Regulation Platform",
+    description:
+      "Expert banking regulation, Basel compliance, and risk management platform for Southeast Asia.",
+    images: ["/og-image.png"],
+  },
   manifest: "/site.webmanifest",
   icons: {
     icon: [
@@ -38,6 +97,9 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "BetterBankings",
+  },
+  verification: {
+    google: "your-google-verification-code", // Replace with actual code from Google Search Console
   },
 };
 

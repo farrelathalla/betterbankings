@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
+import Footer from "@/components/Footer";
 import Link from "next/link";
 import {
   Search,
@@ -12,7 +13,6 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import Footer from "@/components/Footer";
 
 interface Standard {
   id: string;

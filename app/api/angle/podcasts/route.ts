@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
+import { cache, CACHE_TTL, CACHE_KEYS } from "@/lib/cache";
 
 // GET /api/angle/podcasts - List all podcasts with optional category filter
 export async function GET(request: NextRequest) {
@@ -8,6 +9,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get("categoryId");
     const search = searchParams.get("search");
+
+    // Generate cache key based on query params
+    const cacheKey = `${CACHE_KEYS.PODCASTS}:${categoryId || "all"}:${
+      search || ""
+    }`;
+
+    // Only use cache for non-search requests (search should be real-time)
+    if (!search) {
+      const cached = cache.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(cached, {
+          headers: { "X-Cache": "HIT" },
+        });
+      }
+    }
 
     const where: Record<string, unknown> = {};
 
@@ -37,7 +53,16 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ podcasts });
+    const response = { podcasts };
+
+    // Cache non-search results
+    if (!search) {
+      cache.set(cacheKey, response, CACHE_TTL.PODCASTS);
+    }
+
+    return NextResponse.json(response, {
+      headers: { "X-Cache": search ? "BYPASS" : "MISS" },
+    });
   } catch (error) {
     console.error("Error fetching podcasts:", error);
     return NextResponse.json(

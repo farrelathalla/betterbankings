@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
+import { cache, CACHE_TTL, CACHE_KEYS } from "@/lib/cache";
 
 // GET /api/angle/categories - List all categories (public)
 export async function GET() {
   try {
+    // Check cache first
+    const cacheKey = CACHE_KEYS.PODCAST_CATEGORIES;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { "X-Cache": "HIT" },
+      });
+    }
+
     const categories = await prisma.podcastCategory.findMany({
       orderBy: { order: "asc" },
       include: {
@@ -14,7 +24,12 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ categories });
+    const response = { categories };
+    cache.set(cacheKey, response, CACHE_TTL.PODCAST_CATEGORIES);
+
+    return NextResponse.json(response, {
+      headers: { "X-Cache": "MISS" },
+    });
   } catch (error) {
     console.error("Error fetching podcast categories:", error);
     return NextResponse.json(
