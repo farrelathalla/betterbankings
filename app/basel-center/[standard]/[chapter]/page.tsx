@@ -14,6 +14,7 @@ import {
   Download,
   HelpCircle,
   BookOpen,
+  ArrowLeft,
 } from "lucide-react";
 
 // Dynamically import RichContentRenderer to avoid SSR issues
@@ -126,6 +127,9 @@ export default function ChapterPage({
   const [activeSection, setActiveSection] = useState<string>("");
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // Scroll back navigation stack
+  const [scrollStack, setScrollStack] = useState<number[]>([]);
+
   useEffect(() => {
     const fetchChapter = async () => {
       try {
@@ -167,9 +171,40 @@ export default function ChapterPage({
     }
   }, [chapter]);
 
+  // Listen for same-page reference clicks
+  useEffect(() => {
+    const handleReferenceClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link =
+        target.closest('a[href^="#"]') ||
+        target.closest(`a[href*="${chapterCode}#"]`);
+
+      if (link) {
+        const href = link.getAttribute("href");
+        // Check if it's a same-page anchor or same-chapter link
+        if (href?.startsWith("#") || href?.includes(`/${chapterCode}#`)) {
+          // Save current scroll position before navigating
+          setScrollStack((prev) => [...prev, window.scrollY]);
+        }
+      }
+    };
+
+    document.addEventListener("click", handleReferenceClick);
+    return () => document.removeEventListener("click", handleReferenceClick);
+  }, [chapterCode]);
+
   const scrollToSection = (sectionId: string) => {
     setActiveSection(sectionId);
     sectionRefs.current[sectionId]?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Go back to previous scroll position
+  const handleScrollBack = () => {
+    if (scrollStack.length > 0) {
+      const prevPosition = scrollStack[scrollStack.length - 1];
+      setScrollStack((prev) => prev.slice(0, -1));
+      window.scrollTo({ top: prevPosition, behavior: "smooth" });
+    }
   };
 
   if (loading) {
@@ -424,6 +459,23 @@ export default function ChapterPage({
             )}
           </div>
         </div>
+
+        {/* Floating Scroll Back Button */}
+        {scrollStack.length > 0 && (
+          <button
+            onClick={handleScrollBack}
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-[#355189] text-white rounded-xl shadow-lg hover:bg-[#1B2B4B] transition-all hover:scale-105 group"
+            title="Go back to where you clicked the reference"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back</span>
+            {scrollStack.length > 1 && (
+              <span className="ml-1 bg-white/20 text-xs px-1.5 py-0.5 rounded">
+                {scrollStack.length}
+              </span>
+            )}
+          </button>
+        )}
       </main>
     </div>
   );
