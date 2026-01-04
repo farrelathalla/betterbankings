@@ -222,7 +222,7 @@ export default function ChapterPage({
           <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-orange-50 rounded-full blur-[100px] opacity-60"></div>
         </div>
 
-        <div className="relative z-10 px-6 lg:px-12 py-8">
+        <div className="relative z-10 px-6 lg:px-12 py-8 pt-24">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm mb-6">
             <Link

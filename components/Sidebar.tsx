@@ -147,7 +147,7 @@ export default function Sidebar({ isAuthenticated = false }: SidebarProps) {
                 onClick={() => isMobile && setIsOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 group",
-                  pathname.startsWith("/admin")
+                  pathname === "/admin/basel"
                     ? "bg-purple-100 text-purple-700"
                     : "text-[#64748B] hover:bg-purple-50 hover:text-purple-700"
                 )}
@@ -155,12 +155,52 @@ export default function Sidebar({ isAuthenticated = false }: SidebarProps) {
                 <Settings
                   className={cn(
                     "w-5 h-5",
-                    pathname.startsWith("/admin")
+                    pathname === "/admin/basel"
                       ? "text-purple-700"
                       : "text-[#94A3B8] group-hover:text-purple-700"
                   )}
                 />
                 Basel CMS
+              </Link>
+              <Link
+                href="/admin/angle"
+                onClick={() => isMobile && setIsOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 group",
+                  pathname === "/admin/angle"
+                    ? "bg-orange-100 text-orange-700"
+                    : "text-[#64748B] hover:bg-orange-50 hover:text-orange-700"
+                )}
+              >
+                <TrendingUp
+                  className={cn(
+                    "w-5 h-5",
+                    pathname === "/admin/angle"
+                      ? "text-orange-700"
+                      : "text-[#94A3B8] group-hover:text-orange-700"
+                  )}
+                />
+                Angle CMS
+              </Link>
+              <Link
+                href="/admin/notifications"
+                onClick={() => isMobile && setIsOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 group",
+                  pathname === "/admin/notifications"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-[#64748B] hover:bg-blue-50 hover:text-blue-700"
+                )}
+              >
+                <Bell
+                  className={cn(
+                    "w-5 h-5",
+                    pathname === "/admin/notifications"
+                      ? "text-blue-700"
+                      : "text-[#94A3B8] group-hover:text-blue-700"
+                  )}
+                />
+                Notifications
               </Link>
             </nav>
           </div>

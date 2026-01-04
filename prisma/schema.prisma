@@ -123,3 +123,83 @@ model BaselUpdate {
   date        DateTime @default(now())
   createdAt   DateTime @default(now())
 }
+
+// ============================================
+// BetterBankings Angle (Podcast) Models
+// ============================================
+
+// Podcast Categories (e.g., Regulation, Risk Management, Digital Banking)
+model PodcastCategory {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  order     Int       @default(0)
+  podcasts  Podcast[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Main Podcast Episode
+model Podcast {
+  id          String           @id @default(cuid())
+  label       String           // "Season 2 • Ep. 12" (flexible text)
+  title       String
+  description String           @db.Text
+  date        DateTime
+  duration    String           // "42 min"
+  link        String           // Spotify/podcast link
+  categoryId  String
+  category    PodcastCategory  @relation(fields: [categoryId], references: [id])
+  speakers    PodcastSpeaker[]
+  topics      PodcastTopic[]
+  order       Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+// Speaker with title (supports multiple per podcast)
+model PodcastSpeaker {
+  id        String   @id @default(cuid())
+  name      String
+  title     String   // "Chief Regulatory Officer, Regional Bank Association"
+  podcastId String
+  podcast   Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// Topics/Tags for podcasts (supports multiple per podcast)
+model PodcastTopic {
+  id        String   @id @default(cuid())
+  name      String   // "Basel IV", "Compliance", "Regional Banking"
+  podcastId String
+  podcast   Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// Notification System Models
+// ============================================
+
+// Notifications created by admin for all users
+model Notification {
+  id          String             @id @default(cuid())
+  title       String
+  description String             @db.Text
+  category    String             // "Content", "Data", "Regulation"
+  link        String?            // Optional redirect URL
+  createdAt   DateTime           @default(now())
+  userReads   UserNotification[]
+}
+
+// Track read status per user
+model UserNotification {
+  id             String       @id @default(cuid())
+  userId         String
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  isRead         Boolean      @default(false)
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, notificationId])
+}

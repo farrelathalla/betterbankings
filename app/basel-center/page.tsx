@@ -12,6 +12,7 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
+import Footer from "@/components/Footer";
 
 interface Standard {
   id: string;
@@ -130,7 +131,7 @@ export default function BaselCenterPage() {
           <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-orange-50 rounded-full blur-[100px] opacity-60"></div>
         </div>
 
-        <div className="relative z-10 px-6 lg:px-12 py-8">
+        <div className="relative z-10 px-6 lg:px-12 py-8 pt-24">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl lg:text-4xl font-bold text-[#14213D] mb-2">
@@ -351,6 +352,7 @@ export default function BaselCenterPage() {
             </div>
           </div>
         </div>
+        <Footer />
       </main>
     </div>
   );

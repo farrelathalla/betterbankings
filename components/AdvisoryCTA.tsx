@@ -31,7 +31,7 @@ export default function AdvisoryCTA() {
           whileTap={{ scale: 0.95 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="px-8 py-3 bg-[#1B2B4B] text-white font-semibold rounded-lg hover:bg-[#2a4069] transition-colors shadow-lg flex items-center gap-2 mx-auto"
+          className="px-8 py-3 bg-gradient-to-r from-[#1B2B4B] to-[#355189] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity shadow-lg flex items-center gap-2 mx-auto"
         >
           {/* Using a generic icon or just text based on design */}
           <span

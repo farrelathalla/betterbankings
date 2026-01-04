@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { Lock, Download, Loader2, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import Footer from "@/components/Footer";
 
 // Declare Tableau types for TypeScript
 declare global {
@@ -232,21 +233,21 @@ export default function BankingData() {
   };
 
   return (
-    <div className="h-screen bg-[#F8FAFC] flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-screen bg-[#F8FAFC] flex flex-col lg:flex-row">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <main className="w-full flex-1 lg:ml-[280px] h-screen overflow-hidden">
+      <main className="w-full flex-1 lg:ml-[280px] min-h-screen">
         {/* Background Gradients */}
         <div className="fixed inset-0 pointer-events-none z-0">
           <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50 rounded-full blur-[100px] opacity-60"></div>
           <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-orange-50 rounded-full blur-[100px] opacity-60"></div>
         </div>
 
-        <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
+        <div className="relative z-10 px-4 lg:px-8 py-4 pt-24">
           {/* Header Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 flex-shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-[#14213D]">
                 Banking Industry{" "}
@@ -300,7 +301,7 @@ export default function BankingData() {
           </div>
 
           {/* Tab Switcher */}
-          <div className="flex flex-wrap gap-2 mb-4 flex-shrink-0">
+          <div className="flex flex-wrap gap-2 mb-4">
             <button
               onClick={() => setActiveTab("deposit")}
               className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${
@@ -323,8 +324,8 @@ export default function BankingData() {
             </button>
           </div>
 
-          {/* Tableau Container - Takes all remaining height */}
-          <div className="flex-1 min-h-0 bg-white rounded-2xl shadow-sm border border-[#E1E7EF] p-2 overflow-hidden relative">
+          {/* Tableau Container - Fixed height, no internal scroll */}
+          <div className="bg-white rounded-2xl shadow-sm border border-[#E1E7EF] p-2 overflow-hidden relative">
             {(!vizLoaded || !scriptLoaded) && !vizError && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
                 <Loader2 className="w-10 h-10 animate-spin text-[#355189] mb-3" />
@@ -349,7 +350,8 @@ export default function BankingData() {
             )}
             <div
               ref={containerRef}
-              className="w-full h-full [&>tableau-viz]:w-full [&>tableau-viz]:h-full [&>tableau-viz]:block"
+              className="w-full h-full [&>tableau-viz]:w-full [&>tableau-viz]:h-full [&>tableau-viz]:block [&>tableau-viz]:overflow-hidden"
+              style={{ overflow: "hidden" }}
             />
           </div>
         </div>
