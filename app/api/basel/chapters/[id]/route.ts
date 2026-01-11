@@ -14,6 +14,7 @@ export async function GET(
       where: { id },
       include: {
         standard: { select: { id: true, code: true, name: true } },
+        pdfs: { orderBy: { order: "asc" } },
         sections: {
           orderBy: { order: "asc" },
           include: {

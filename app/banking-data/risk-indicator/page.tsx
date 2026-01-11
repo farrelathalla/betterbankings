@@ -34,7 +34,7 @@ interface TableauDataTable {
 
 export default function BankingData() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("deposit");
+  const [activeTab, setActiveTab] = useState("solvency");
   const [isDownloading, setIsDownloading] = useState(false);
   const [vizLoaded, setVizLoaded] = useState(false);
   const [vizReady, setVizReady] = useState(false);
@@ -44,10 +44,51 @@ export default function BankingData() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const tableauUrls: Record<string, string> = {
-    deposit:
-      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/Solvency",
     solvency:
-      "https://public.tableau.com/views/MaskedGroupingRiskIndicator-MedianIndustryRatioBankKBMIGrouped_17265081096610/Solvency",
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/Solvency",
+    baselCompliance:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/BaselCompliance",
+    ownFundsRWA:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/OwnFundsandRWA",
+    ifrs9:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/IFRS9",
+    creditRisk:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/CreditRisk",
+    irrbGranular:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/IRRBBGranular",
+    irrbSummary:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/IRRBBSummary",
+    fundingLiquidity:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/FundingandLiduqity",
+    lcrNsfr:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/LCRandNSFRDashboard",
+    creditFundingRates:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/Credit%26FundingRates",
+    profitabilityRoA:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/ProfitabilityRoA",
+    profitabilityRoE:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/ProfitabilityRoE",
+    bankScore:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/BankScore",
+    heatmap:
+      "https://public.tableau.com/views/GroupingRiskIndicator-Separated/RiskIndicatorHeatmap",
+  };
+
+  const tabLabels: Record<string, string> = {
+    solvency: "Solvency",
+    baselCompliance: "Basel Compliance",
+    ownFundsRWA: "Own Funds & RWA",
+    ifrs9: "IFRS 9",
+    creditRisk: "Credit Risk",
+    irrbGranular: "IRRBB Granular",
+    irrbSummary: "IRRBB Summary",
+    fundingLiquidity: "Funding & Liquidity",
+    lcrNsfr: "LCR & NSFR",
+    creditFundingRates: "Credit & Funding Rates",
+    profitabilityRoA: "Profitability (RoA)",
+    profitabilityRoE: "Profitability (RoE)",
+    bankScore: "Bank Score",
+    heatmap: "Risk Indicator Heatmap",
   };
 
   // Load Tableau JS API once on mount
@@ -301,27 +342,20 @@ export default function BankingData() {
           </div>
 
           {/* Tab Switcher */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <button
-              onClick={() => setActiveTab("deposit")}
-              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${
-                activeTab === "deposit"
-                  ? "bg-gradient-to-r from-[#1B2B4B] to-[#355189] text-white shadow-lg"
-                  : "bg-white text-[#64748B] hover:bg-gray-50 border border-[#E1E7EF]"
-              }`}
-            >
-              Deposit & Lending
-            </button>
-            <button
-              onClick={() => setActiveTab("solvency")}
-              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${
-                activeTab === "solvency"
-                  ? "bg-gradient-to-r from-[#1B2B4B] to-[#355189] text-white shadow-lg"
-                  : "bg-white text-[#64748B] hover:bg-gray-50 border border-[#E1E7EF]"
-              }`}
-            >
-              Risk & Solvency
-            </button>
+          <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-2">
+            {Object.entries(tabLabels).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 whitespace-nowrap ${
+                  activeTab === key
+                    ? "bg-gradient-to-r from-[#1B2B4B] to-[#355189] text-white shadow-lg"
+                    : "bg-white text-[#64748B] hover:bg-gray-50 border border-[#E1E7EF]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Tableau Container - Fixed height, no internal scroll */}

@@ -47,20 +47,34 @@ model BaselStandard {
 
 // Chapters within a standard (SCO10, SCO30, CAP10, etc.)
 model BaselChapter {
-  id            String         @id @default(cuid())
-  code          String         // "10", "30"
-  title         String         // "Introduction", "Banking, securities..."
+  id            String            @id @default(cuid())
+  code          String            // "10", "30"
+  title         String            // "Introduction", "Banking, securities..."
   standardId    String
-  standard      BaselStandard  @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  standard      BaselStandard     @relation(fields: [standardId], references: [id], onDelete: Cascade)
   effectiveDate DateTime?
   lastUpdate    DateTime?
-  status        String         @default("current") // "current", "archived"
-  order         Int            @default(0)
+  status        String            @default("current") // "current", "archived"
+  order         Int               @default(0)
   sections      BaselSection[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  pdfs          BaselChapterPDF[] // Optional PDFs attached to chapter
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@unique([standardId, code])
+}
+
+// PDFs attached to chapters (optional, for downloadable documents)
+model BaselChapterPDF {
+  id        String       @id @default(cuid())
+  name      String       // Display name (e.g., "Basel III Framework")
+  url       String       // Cloudinary URL
+  publicId  String       // Cloudinary public_id for deletion
+  chapterId String
+  chapter   BaselChapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 // Sections within a chapter (e.g., "Consolidation", "General requirements")

@@ -22,12 +22,30 @@ import {
   X,
   Calculator,
   Loader2,
+  ChevronDown,
 } from "lucide-react";
 import Image from "next/image";
 import Logo from "@/public/logo.webp";
 
+// Define a type for nav items with optional children
+interface NavItem {
+  label: string;
+  href?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children?: {
+    label: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[];
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
 // Define navigation items based on new design
-const NAV_SECTIONS = [
+const NAV_SECTIONS: NavSection[] = [
   {
     title: "QUICK ACCESS",
     items: [
@@ -50,11 +68,20 @@ const NAV_SECTIONS = [
     items: [
       {
         label: "Banking Industry Data",
-        href: "/banking-data",
         icon: Building2,
+        children: [
+          {
+            label: "Risk Indicator",
+            href: "/banking-data/risk-indicator",
+            icon: BarChart3,
+          },
+          {
+            label: "Bank Performance",
+            href: "/banking-data/bank-performance",
+            icon: LineChart,
+          },
+        ],
       },
-      { label: "Risk Indicator", href: "/risk-indicator", icon: BarChart3 },
-      { label: "Bank Performance", href: "/bank-performance", icon: LineChart },
     ],
   },
   {
@@ -81,6 +108,30 @@ export default function Sidebar({ isAuthenticated = false }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+
+  // Auto-expand menu if current path matches a child
+  useEffect(() => {
+    NAV_SECTIONS.forEach((section) => {
+      section.items.forEach((item) => {
+        if (item.children) {
+          const isChildActive = item.children.some((child) =>
+            pathname.startsWith(child.href)
+          );
+          if (isChildActive && !expandedMenus.includes(item.label)) {
+            setExpandedMenus((prev) => [...prev, item.label]);
+          }
+        }
+      });
+    });
+  }, [pathname]);
+
+  const toggleMenu = (label: string) => {
+    setExpandedMenus((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+  };
+
   // Handle Resize for Mobile Check
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -106,11 +157,98 @@ export default function Sidebar({ isAuthenticated = false }: SidebarProps) {
             <nav className="flex flex-col gap-1">
               {section.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const hasChildren = item.children && item.children.length > 0;
+                const isExpanded = expandedMenus.includes(item.label);
+                const isActive = item.href ? pathname === item.href : false;
+                const isChildActive =
+                  hasChildren &&
+                  item.children?.some((child) =>
+                    pathname.startsWith(child.href)
+                  );
+
+                // If item has children, render as dropdown
+                if (hasChildren) {
+                  return (
+                    <div key={item.label}>
+                      <button
+                        onClick={() => toggleMenu(item.label)}
+                        className={cn(
+                          "flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 group",
+                          isChildActive
+                            ? "bg-[#E0E7FF] text-[#14213D]"
+                            : "text-[#64748B] hover:bg-gray-50 hover:text-[#14213D]"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon
+                            className={cn(
+                              "w-5 h-5",
+                              isChildActive
+                                ? "text-[#14213D]"
+                                : "text-[#94A3B8] group-hover:text-[#14213D]"
+                            )}
+                          />
+                          {item.label}
+                        </div>
+                        <ChevronDown
+                          className={cn(
+                            "w-4 h-4 transition-transform duration-200",
+                            isExpanded ? "rotate-180" : "",
+                            isChildActive ? "text-[#14213D]" : "text-[#94A3B8]"
+                          )}
+                        />
+                      </button>
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="ml-4 mt-1 flex flex-col gap-1 border-l-2 border-[#E1E7EF] pl-3">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildItemActive =
+                                  pathname === child.href;
+                                return (
+                                  <Link
+                                    key={child.href}
+                                    href={child.href}
+                                    onClick={() => isMobile && setIsOpen(false)}
+                                    className={cn(
+                                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group",
+                                      isChildItemActive
+                                        ? "bg-[#E0E7FF] text-[#14213D]"
+                                        : "text-[#64748B] hover:bg-gray-50 hover:text-[#14213D]"
+                                    )}
+                                  >
+                                    <ChildIcon
+                                      className={cn(
+                                        "w-4 h-4",
+                                        isChildItemActive
+                                          ? "text-[#14213D]"
+                                          : "text-[#94A3B8] group-hover:text-[#14213D]"
+                                      )}
+                                    />
+                                    {child.label}
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                }
+
+                // Regular link item
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={item.href!}
                     onClick={() => isMobile && setIsOpen(false)}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 group",

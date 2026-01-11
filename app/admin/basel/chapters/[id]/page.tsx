@@ -18,6 +18,8 @@ import {
   HelpCircle,
   GripVertical,
   X,
+  Upload,
+  FileText,
 } from "lucide-react";
 
 // Dynamically import SubsectionEditor to avoid SSR issues with TipTap
@@ -87,12 +89,20 @@ interface Section {
   subsections: Subsection[];
 }
 
+interface ChapterPDF {
+  id: string;
+  name: string;
+  url: string;
+  createdAt: string;
+}
+
 interface Chapter {
   id: string;
   code: string;
   title: string;
   status: string;
   effectiveDate: string | null;
+  pdfs: ChapterPDF[];
   standard: {
     id: string;
     code: string;
@@ -149,6 +159,11 @@ export default function AdminChapterPage({
   const [newFootnote, setNewFootnote] = useState({ number: 1, content: "" });
   const [addingFAQ, setAddingFAQ] = useState<string | null>(null);
   const [newFAQ, setNewFAQ] = useState({ question: "", answer: "" });
+
+  // PDF upload state
+  const [uploadingPDF, setUploadingPDF] = useState(false);
+  const [pdfName, setPdfName] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== "admin")) {
@@ -326,6 +341,40 @@ export default function AdminChapterPage({
     }
   };
 
+  // PDF CRUD
+  const handleUploadPDF = async () => {
+    if (!pdfFile || !pdfName || !chapter) return;
+    setUploadingPDF(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", pdfFile);
+      formData.append("name", pdfName);
+      formData.append("chapterId", chapter.id);
+
+      await fetch("/api/basel/pdfs", {
+        method: "POST",
+        body: formData,
+      });
+      setPdfFile(null);
+      setPdfName("");
+      fetchChapter();
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+    } finally {
+      setUploadingPDF(false);
+    }
+  };
+
+  const handleDeletePDF = async (id: string) => {
+    if (!confirm("Delete this PDF?")) return;
+    try {
+      await fetch(`/api/basel/pdfs/${id}`, { method: "DELETE" });
+      fetchChapter();
+    } catch (error) {
+      console.error("Error deleting PDF:", error);
+    }
+  };
+
   const toggleSection = (id: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -456,6 +505,84 @@ export default function AdminChapterPage({
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* PDF Documents Section */}
+          <div className="bg-white rounded-2xl border border-[#E1E7EF] p-6 mb-8">
+            <h2 className="text-lg font-bold text-[#14213D] mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#355189]" />
+              PDF Documents
+            </h2>
+
+            {/* Upload Form */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-4 p-4 bg-gray-50 rounded-lg">
+              <input
+                type="text"
+                value={pdfName}
+                onChange={(e) => setPdfName(e.target.value)}
+                placeholder="PDF name (e.g., Basel III Framework)"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#355189] outline-none text-sm"
+              />
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm file:mr-3 file:px-3 file:py-1 file:rounded file:border-0 file:bg-[#355189] file:text-white file:cursor-pointer"
+              />
+              <button
+                onClick={handleUploadPDF}
+                disabled={!pdfFile || !pdfName || uploadingPDF}
+                className="px-4 py-2 bg-[#355189] text-white rounded-lg font-semibold text-sm hover:bg-[#1B2B4B] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {uploadingPDF ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+                {uploadingPDF ? "Uploading..." : "Upload"}
+              </button>
+            </div>
+
+            {/* PDF List */}
+            {chapter.pdfs && chapter.pdfs.length > 0 ? (
+              <div className="space-y-2">
+                {chapter.pdfs.map((pdf) => (
+                  <div
+                    key={pdf.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-red-500" />
+                      <div>
+                        <p className="font-medium text-[#14213D]">{pdf.name}</p>
+                        <p className="text-xs text-gray-500">
+                          Uploaded:{" "}
+                          {new Date(pdf.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={pdf.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1 text-sm text-[#355189] border border-[#355189] rounded hover:bg-[#355189] hover:text-white transition-colors"
+                      >
+                        View
+                      </a>
+                      <button
+                        onClick={() => handleDeletePDF(pdf.id)}
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">No PDFs uploaded yet.</p>
+            )}
           </div>
 
           {/* Sections */}
