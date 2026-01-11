@@ -3,6 +3,17 @@ import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { uploadPDF } from "@/lib/cloudinary";
 
+// Increase body size limit for file uploads (50MB)
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// Alternative: Use Next.js 13+ route segment config
+export const maxDuration = 60; // Allow up to 60 seconds for upload
+export const dynamic = "force-dynamic";
+
 // GET /api/basel/pdfs - List PDFs for a chapter
 export async function GET(request: Request) {
   try {
